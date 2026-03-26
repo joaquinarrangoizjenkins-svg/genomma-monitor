@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genomma Lab · Monitor de Noticias</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e0f11;
+    --surface: #16181c;
+    --surface2: #1e2026;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #4f9cf9;
+    --accent2: #7c3aed;
+    --text: #e8eaed;
+    --muted: #8b8fa8;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(14,15,17,0.95);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #4f9cf9, #7c3aed);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: white;
+  }
+
+  .logo-text {
+    display: flex; flex-direction: column; gap: 1px;
+  }
+
+  .logo-title {
+    font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: 0.02em;
+  }
+
+  .logo-sub {
+    font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .status-text {
+    font-size: 12px; color: var(--muted);
+  }
+
+  /* Main layout */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    min-height: 0;
+  }
+
+  /* Sidebar */
+  aside {
+    border-right: 1px solid var(--border);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+    background: var(--surface);
+  }
+
+  .sidebar-section h3 {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .brand-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .brand-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+
+  .brand-item:hover { background: var(--surface2); }
+
+  .brand-item.selected { background: rgba(79,156,249,0.1); }
+
+  .brand-item.selected .brand-dot { background: var(--accent); }
+
+  .brand-checkbox {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border2);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .brand-item.selected .brand-checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .brand-item.selected .brand-checkbox::after {
+    content: '';
+    width: 4px; height: 7px;
+    border-right: 1.5px solid white;
+    border-bottom: 1.5px solid white;
+    transform: rotate(45deg) translate(-1px, -1px);
+    display: block;
+  }
+
+  .brand-name {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .brand-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+
+  /* Date range */
+  .range-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    background: transparent;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .pill.active {
+    background: rgba(79,156,249,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Focus areas */
+  .focus-list {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  .focus-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .focus-item:hover { background: var(--surface2); color: var(--text); }
+
+  .focus-item.active { color: var(--text); }
+
+  .focus-icon {
+    font-size: 14px;
+    width: 20px; text-align: center;
+  }
+
+  /* Generate button */
+  .generate-btn {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: var(--radius);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+
+  .generate-btn:hover { opacity: 0.9; }
+  .generate-btn:active { transform: scale(0.99); }
+  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-icon { font-size: 16px; }
+
+  /* Content area */
+  .content {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 48px;
+    text-align: center;
+  }
+
+  .empty-icon {
+    width: 64px; height: 64px;
+    background: var(--surface2);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+
+  .empty-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text);
+  }
+
+  .empty-sub {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 360px;
+    line-height: 1.6;
+  }
+
+  /* Loading state */
+  .loading-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 48px;
+  }
+
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-steps {
+    display: flex; flex-direction: column; gap: 8px; align-items: center;
+  }
+
+  .loading-step {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+    transition: color 0.3s;
+  }
+
+  .loading-step.active { color: var(--accent); }
+  .loading-step.done { color: var(--success); }
+
+  .step-icon { font-size: 14px; }
+
+  /* Report */
+  .report-area {
+    padding: 40px 48px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .report-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .report-date {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .report-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px;
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  .report-meta {
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+
+  .meta-tag {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border2);
+  }
+
+  /* Executive summary box */
+  .exec-summary {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+  }
+
+  .exec-summary h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .exec-summary p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* Sections */
+  .report-section {
+    margin-bottom: 32px;
+  }
+
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .section-icon {
+    width: 28px; height: 28px;
+    background: var(--surface2);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* News cards */
+  .news-grid {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .news-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+
+  .news-card:hover { border-color: var(--border2); }
+
+  .news-card-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .news-brand {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .news-sentiment {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .sentiment-positive { background: rgba(52,211,153,0.1); color: var(--success); }
+  .sentiment-neutral  { background: rgba(139,143,168,0.1); color: var(--muted); }
+  .sentiment-negative { background: rgba(248,113,113,0.1); color: var(--danger); }
+
+  .news-headline {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .news-summary {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .news-source {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .source-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--border2); }
+
+  /* Key insights */
+  .insights-list {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .insight-item {
+    display: flex; gap: 12px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .insight-bullet {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .insight-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  /* Recommendations */
+  .rec-item {
+    display: flex; gap: 14px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .rec-num {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: rgba(79,156,249,0.15);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .rec-content { flex: 1; }
+
+  .rec-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .rec-text {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* Actions bar */
+  .actions-bar {
+    display: flex; gap: 10px; margin-bottom: 32px;
+  }
+
+  .action-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .action-btn:hover { background: var(--surface2); color: var(--text); }
+
+  /* Error */
+  .error-banner {
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.25);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex; gap: 12px; align-items: flex-start;
+    margin: 24px 48px;
+  }
+
+  .error-icon { font-size: 16px; flex-shrink: 0; }
+  .error-text { font-size: 13px; color: var(--danger); line-height: 1.6; }
+
+  /* API key setup */
+  .setup-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    padding: 36px;
+    width: 460px;
+    max-width: 90vw;
+  }
+
+  .setup-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .setup-sub {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .input-group {
+    margin-bottom: 18px;
+  }
+
+  .input-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .api-input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .api-input:focus { border-color: var(--accent); }
+
+  .setup-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .setup-hint a { color: var(--accent); text-decoration: none; }
+
+  .setup-btn {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .setup-btn:hover { opacity: 0.9; }
+
+  /* Responsive */
+  @media (max-width: 680px) {
+    main { grid-template-columns: 1fr; }
+    aside { border-right: none; border-bottom: 1px solid var(--border); }
+    .report-area { padding: 24px 20px; }
+  }
+
+  /* Prose styles inside report */
+  .report-prose {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .report-prose strong {
+    font-weight: 600;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+
+<!-- API Key setup overlay -->
+<div class="setup-overlay" id="setup-overlay">
+  <div class="setup-card">
+    <div class="setup-title">Configurar agente</div>
+    <div class="setup-sub">Para comenzar necesitas una API key de Anthropic. Esta se guarda solo en tu navegador y nunca se comparte.</div>
+    <div class="input-group">
+      <label class="input-label">API Key de Anthropic</label>
+      <input class="api-input" type="password" id="api-key-input" placeholder="sk-ant-api03-..." />
+      <div class="setup-hint">
+        Obtén tu key en <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
+      </div>
+    </div>
+    <button class="setup-btn" onclick="saveApiKey()">Guardar y comenzar</button>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">G</div>
+    <div class="logo-text">
+      <span class="logo-title">Genomma Lab</span>
+      <span class="logo-sub">Monitor de Noticias</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <span class="status-text">Live</span>
+    <button class="action-btn" onclick="resetApiKey()" style="margin-left:8px;font-size:12px;padding:5px 10px;">⚙ API Key</button>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-section">
+      <h3>Marcas a monitorear</h3>
+      <div class="brand-list" id="brand-list"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Período</h3>
+      <div class="range-pills">
+        <button class="pill active" onclick="setPeriod(this,'hoy')">Hoy</button>
+        <button class="pill" onclick="setPeriod(this,'semana')">7 días</button>
+        <button class="pill" onclick="setPeriod(this,'quincena')">15 días</button>
+        <button class="pill" onclick="setPeriod(this,'mes')">30 días</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Enfoque</h3>
+      <div class="focus-list" id="focus-list"></div>
+    </div>
+
+    <button class="generate-btn" onclick="generateReport()" id="gen-btn">
+      <span class="btn-icon">⚡</span>
+      Generar Resumen Ejecutivo
+    </button>
+  </aside>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">Listo para analizar</div>
+      <div class="empty-sub">Selecciona las marcas que quieres monitorear, elige el período y haz clic en "Generar Resumen Ejecutivo".</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const BRANDS = [
+  { id: 'genommalab', name: 'Genomma Lab', color: '#4f9cf9' },
+  { id: 'cicatricure', name: 'Cicatricure', color: '#a78bfa' },
+  { id: 'tionacho', name: 'Tío Nacho', color: '#34d399' },
+  { id: 'suerox', name: 'Suerox', color: '#fbbf24' },
+  { id: 'next', name: 'Next', color: '#f87171' },
+  { id: 'goicochea', name: 'Goicochea', color: '#60a5fa' },
+  { id: 'alliviax', name: 'Alliviax', color: '#c084fc' },
+  { id: 'allitriple', name: 'Allitriple', color: '#86efac' },
+  { id: 'xray', name: 'X-Ray', color: '#fb923c' },
+];
+
+const FOCUS_AREAS = [
+  { id: 'competencia', icon: '⚔️', label: 'Movimientos de competencia' },
+  { id: 'lanzamientos', icon: '🚀', label: 'Lanzamientos de competidores' },
+  { id: 'regulatorio', icon: '⚖️', label: 'Cambios regulatorios (COFEPRIS)' },
+  { id: 'clima', icon: '🌦️', label: 'Clima y fenómenos naturales' },
+  { id: 'macroeconomia', icon: '💹', label: 'Macroeconomía y tipo de cambio' },
+  { id: 'salud', icon: '🏥', label: 'Tendencias de salud y consumo' },
+  { id: 'insumos', icon: '🧪', label: 'Precios de insumos clave' },
+];
+
+let selectedBrands = new Set(['genommalab', 'cicatricure', 'tionacho', 'suerox']);
+let selectedPeriod = 'hoy';
+let selectedFocus = new Set(['competencia', 'lanzamientos', 'regulatorio', 'clima', 'insumos']);
+let isGenerating = false;
+
+function init() {
+  renderBrands();
+  renderFocus();
+  checkApiKey();
+}
+
+function renderBrands() {
+  const list = document.getElementById('brand-list');
+  list.innerHTML = BRANDS.map(b => `
+    <div class="brand-item ${selectedBrands.has(b.id) ? 'selected' : ''}" onclick="toggleBrand('${b.id}')">
+      <div class="brand-checkbox"></div>
+      <span class="brand-name">${b.name}</span>
+      <div class="brand-dot" style="${selectedBrands.has(b.id) ? `background:${b.color}` : ''}"></div>
+    </div>
+  `).join('');
+}
+
+function renderFocus() {
+  const list = document.getElementById('focus-list');
+  list.innerHTML = FOCUS_AREAS.map(f => `
+    <div class="focus-item ${selectedFocus.has(f.id) ? 'active' : ''}" onclick="toggleFocus('${f.id}')">
+      <span class="focus-icon">${f.icon}</span>
+      <span>${f.label}</span>
+    </div>
+  `).join('');
+}
+
+function toggleBrand(id) {
+  if (selectedBrands.has(id)) {
+    if (selectedBrands.size > 1) selectedBrands.delete(id);
+  } else {
+    selectedBrands.add(id);
+  }
+  renderBrands();
+}
+
+function toggleFocus(id) {
+  if (selectedFocus.has(id)) {
+    if (selectedFocus.size > 1) selectedFocus.delete(id);
+  } else {
+    selectedFocus.add(id);
+  }
+  renderFocus();
+}
+
+function setPeriod(el, period) {
+  selectedPeriod = period;
+  document.querySelectorAll('.range-pills .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function checkApiKey() {
+  const key = localStorage.getItem('anthropic_key');
+  if (key) {
+    document.getElementById('setup-overlay').style.display = 'none';
+  }
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant')) {
+    alert('Por favor ingresa una API key válida de Anthropic (debe comenzar con sk-ant)');
+    return;
+  }
+  localStorage.setItem('anthropic_key', key);
+  document.getElementById('setup-overlay').style.display = 'none';
+}
+
+function resetApiKey() {
+  localStorage.removeItem('anthropic_key');
+  document.getElementById('api-key-input').value = '';
+  document.getElementById('setup-overlay').style.display = 'flex';
+}
+
+const periodLabels = {
+  'hoy': 'hoy', 'semana': 'los últimos 7 días',
+  'quincena': 'los últimos 15 días', 'mes': 'los últimos 30 días'
+};
+
+const LOADING_STEPS = [
+  { id: 's1', icon: '🔍', label: 'Buscando noticias en la web...' },
+  { id: 's2', icon: '🧠', label: 'Analizando cobertura por marca...' },
+  { id: 's3', icon: '📊', label: 'Evaluando sentimiento y relevancia...' },
+  { id: 's4', icon: '✍️', label: 'Redactando resumen ejecutivo...' },
+];
+
+function showLoading() {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <div class="loading-steps">
+        ${LOADING_STEPS.map(s => `
+          <div class="loading-step" id="step-${s.id}">
+            <span class="step-icon">${s.icon}</span>
+            <span>${s.label}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  let current = 0;
+  const interval = setInterval(() => {
+    if (current < LOADING_STEPS.length) {
+      if (current > 0) document.getElementById(`step-s${current}`)?.classList.add('done');
+      document.getElementById(`step-s${current + 1}`)?.classList.add('active');
+      current++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 1800);
+
+  return interval;
+}
+
+async function generateReport() {
+  if (isGenerating) return;
+  const apiKey = localStorage.getItem('anthropic_key');
+  if (!apiKey) { document.getElementById('setup-overlay').style.display = 'flex'; return; }
+
+  const brands = BRANDS.filter(b => selectedBrands.has(b.id)).map(b => b.name);
+  const focusAreas = FOCUS_AREAS.filter(f => selectedFocus.has(f.id)).map(f => f.label);
+
+  isGenerating = true;
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Generando...';
+
+  const loadingInterval = showLoading();
+
+  const today = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const systemPrompt = `Eres un analista de inteligencia competitiva y de mercado senior, especializado en la industria farmacéutica OTC y de cuidado personal en México y Latinoamérica.
+
+Tu enfoque es EXCLUSIVAMENTE en factores EXTERNOS que pueden impactar el negocio de Genomma Lab: noticias del entorno, no de la empresa en sí misma.
+
+FORMATO DE RESPUESTA: Debes responder ÚNICAMENTE con un objeto JSON válido, sin texto adicional, sin markdown, sin backticks.
+
+El JSON debe tener exactamente esta estructura:
+{
+  "resumen_ejecutivo": "párrafo de 3-4 oraciones destacando los factores externos más relevantes y su impacto potencial en ventas o estrategia",
+  "noticias": [
+    {
+      "marca": "marca de Genomma Lab más afectada, o 'Genomma Lab' si aplica a toda la empresa",
+      "categoria": "competencia|lanzamiento|regulatorio|clima|macroeconomia|salud|insumos",
+      "titular": "titular claro y específico de la noticia",
+      "resumen": "resumen de 2 oraciones explicando la noticia y su impacto potencial en la marca",
+      "impacto": "positivo|neutro|negativo|oportunidad",
+      "fuente": "nombre del medio o fuente",
+      "relevancia": "alta|media"
+    }
+  ],
+  "insights_clave": ["insight 1 accionable", "insight 2", "insight 3", "insight 4"],
+  "recomendaciones": [
+    { "titulo": "título corto", "descripcion": "acción concreta que debe tomar el equipo de negocio o marketing" }
+  ],
+  "alerta": "alerta urgente si hay algo que requiere atención inmediata (ej. huracán inminente, retiro de producto competidor, cambio regulatorio urgente), o null si no hay"
+}
+
+Tipos de noticias que DEBES buscar y priorizar:
+- Cambios drásticos en precios de insumos clave: resinas plásticas (PET, HDPE) para envases, ingredientes activos farmacéuticos (paracetamol, ibuprofeno, sales de rehidratación), aceites vegetales y ceras para cosméticos, materias primas petroquímicas, cartón y papel para empaque. Incluye el porcentaje de cambio y causa (aranceles, escasez, clima, etc.)
+- Movimientos estratégicos de competidores (Bayer, Pfizer Consumer, Procter & Gamble, Unilever, Grisi, Liomont, etc.)
+- Lanzamientos de nuevos productos de la competencia en categorías donde Genomma Lab compite
+- Cambios en regulaciones de COFEPRIS, FDA, o reguladores latinoamericanos que afecten ingredientes, etiquetado o publicidad
+- Fenómenos climáticos: huracanes, ondas de calor, frentes fríos, sequías, que impacten zonas de venta o demanda de productos (rehidratantes, protectores solares, medicamentos para gripe, etc.)
+- Tendencias de salud emergentes que creen demanda u oportunidades (ej. aumento de casos de gripe, tendencias de skincare, etc.)
+- Noticias macroeconómicas: inflación, tipo de cambio, poder adquisitivo del consumidor mexicano
+- Cambios en canales de distribución, retail, o e-commerce relevantes para la industria
+
+Genera entre 5-9 noticias. Sé específico con nombres, fechas y datos concretos. NO incluyas noticias sobre Genomma Lab en sí misma.`;
+
+  const userPrompt = `Genera un reporte de inteligencia externa para Genomma Lab, enfocado en las marcas: ${brands.join(', ')}.
+
+Período: ${periodLabels[selectedPeriod]}
+Fecha de hoy: ${today}
+Áreas de análisis solicitadas: ${focusAreas.join(', ')}
+
+Busca noticias del ENTORNO EXTERNO que puedan impactar estas marcas:
+
+${focusAreas.includes('Movimientos de competencia') || focusAreas.includes('Lanzamientos de competidores') ? `
+COMPETENCIA: Busca movimientos de Bayer Consumer Health, Pfizer Consumer, Procter & Gamble (Head & Shoulders, Pantene, Vicks), Unilever, Grisi, Liomont, Armstrong, y otros competidores en las categorías de cuidado personal, medicamentos OTC y rehidratación oral en México y LATAM.
+` : ''}
+${focusAreas.includes('Cambios regulatorios (COFEPRIS)') ? `
+REGULATORIO: Cambios en normas de COFEPRIS sobre publicidad de medicamentos OTC, ingredientes cosméticos, etiquetado nutrimental, o restricciones a claims de productos de cuidado personal.
+` : ''}
+${focusAreas.includes('Clima y fenómenos naturales') ? `
+CLIMA: Fenómenos meteorológicos actuales o pronosticados en México y LATAM: huracanes en el Golfo o Pacífico, ondas de calor que impacten zonas donde vende Suerox o protectores solares, frentes fríos que aumenten demanda de productos para gripe (Next), temporada de lluvias. Incluye estados o regiones afectadas y fechas.
+` : ''}
+${focusAreas.includes('Macroeconomía y tipo de cambio') ? `
+MACRO: Tipo de cambio MXN/USD actual, inflación en canasta básica y productos de cuidado personal, noticias de poder adquisitivo del consumidor mexicano que puedan afectar volumen de ventas.
+` : ''}
+${focusAreas.includes('Tendencias de salud y consumo') ? `
+SALUD Y CONSUMO: Tendencias emergentes en skincare, salud preventiva, automedicación, ingredientes de moda (retinol, ácido hialurónico, probióticos), cambios en comportamiento del consumidor post-COVID, influencia de redes sociales en compra de productos de cuidado personal.
+` : ''}
+${focusAreas.includes('Precios de insumos clave') ? `
+INSUMOS: Busca movimientos de precio significativos (>5%) en materias primas relevantes para Genomma Lab:
+- Resinas plásticas PET y HDPE (envases de Suerox, Tío Nacho, Cicatricure)
+- Ingredientes activos: paracetamol, ibuprofeno, naproxeno (Next, Alliviax), sales de rehidratación oral (Suerox)
+- Aceites vegetales (coco, argán, jojoba) y keratina (Tío Nacho)
+- Alantoína, extracto de cebolla, vitamina E (Cicatricure, Goicochea)
+- Petróleo y derivados petroquímicos (impacta costos de envase y transporte)
+- Cartón y papel para empaque secundario
+- Aranceles o restricciones de importación de ingredientes desde China, India o EE.UU.
+Incluye el porcentaje de cambio, causa (aranceles, clima, escasez, geopolítica) e impacto estimado en costo de producción.
+` : ''}
+
+Para cada noticia, explica claramente qué marca de Genomma Lab se ve afectada y en qué dirección (amenaza u oportunidad).`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    clearInterval(loadingInterval);
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `Error ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Extract text from response (may contain tool_use blocks)
+    const textBlocks = data.content.filter(b => b.type === 'text');
+    const fullText = textBlocks.map(b => b.text).join('');
+
+    // Parse JSON from response
+    let report;
+    try {
+      const clean = fullText.replace(/```json|```/g, '').trim();
+      report = JSON.parse(clean);
+    } catch(e) {
+      // Try to extract JSON object
+      const match = fullText.match(/\{[\s\S]+\}/);
+      if (match) report = JSON.parse(match[0]);
+      else throw new Error('No se pudo parsear la respuesta del modelo');
+    }
+
+    renderReport(report, brands);
+
+  } catch (error) {
+    clearInterval(loadingInterval);
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <div class="error-text">
+          <strong>Error al generar el reporte:</strong> ${error.message}<br>
+          Verifica tu API key y que tengas saldo disponible en tu cuenta de Anthropic.
+        </div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">🔄</div>
+        <div class="empty-title">Inténtalo de nuevo</div>
+      </div>
+    `;
+  }
+
+  isGenerating = false;
+  btn.disabled = false;
+  btn.innerHTML = '<span class="btn-icon">⚡</span> Generar Resumen Ejecutivo';
+}
+
+const categoryLabels = {
+  competencia:   { label: '⚔️ Competencia', color: '#f87171' },
+  lanzamiento:   { label: '🚀 Lanzamiento', color: '#fb923c' },
+  regulatorio:   { label: '⚖️ Regulatorio', color: '#a78bfa' },
+  clima:         { label: '🌦️ Clima',       color: '#60a5fa' },
+  macroeconomia: { label: '💹 Macro',        color: '#fbbf24' },
+  salud:         { label: '🏥 Salud',        color: '#34d399' },
+  insumos:       { label: '🧪 Insumos',      color: '#f97316' },
+};
+
+const impactoLabels = {
+  positivo:    { label: '↑ Positivo',    cls: 'sentiment-positive' },
+  neutro:      { label: '→ Neutro',      cls: 'sentiment-neutral'  },
+  negativo:    { label: '↓ Negativo',    cls: 'sentiment-negative' },
+  oportunidad: { label: '★ Oportunidad', cls: 'sentiment-positive' },
+};
+
+function renderReport(report, brands) {
+  const today = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const periodText = periodLabels[selectedPeriod];
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="report-area">
+      
+      ${report.alerta ? `
+        <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:10px;padding:12px 18px;display:flex;gap:10px;align-items:center;margin-bottom:24px;">
+          <span style="font-size:16px;">🚨</span>
+          <span style="font-size:13px;color:var(--warning);">${report.alerta}</span>
+        </div>
+      ` : ''}
+
+      <div class="report-header">
+        <div class="report-date">${today}</div>
+        <div class="report-title">Resumen Ejecutivo de Noticias</div>
+        <div class="report-meta">
+          ${brands.map(b => `<span class="meta-tag">${b}</span>`).join('')}
+          <span class="meta-tag">📅 ${periodText.charAt(0).toUpperCase() + periodText.slice(1)}</span>
+          <span class="meta-tag">🤖 Powered by Claude</span>
+        </div>
+      </div>
+
+      <div class="actions-bar">
+        <button class="action-btn" onclick="copyReport()">📋 Copiar texto</button>
+        <button class="action-btn" onclick="window.print()">🖨 Imprimir</button>
+        <button class="action-btn" onclick="generateReport()">🔄 Actualizar</button>
+      </div>
+
+      <div class="exec-summary">
+        <h2>Resumen Ejecutivo</h2>
+        <p>${report.resumen_ejecutivo}</p>
+      </div>
+
+      <div class="report-section">
+        <div class="section-header">
+          <div class="section-icon">📰</div>
+          <div class="section-title">Noticias Relevantes</div>
+        </div>
+        <div class="news-grid">
+        ${report.noticias.map(n => {
+          const cat = categoryLabels[n.categoria] || { label: n.categoria, color: 'var(--muted)' };
+          const imp = impactoLabels[n.impacto] || impactoLabels['neutro'];
+          return `
+            <div class="news-card">
+              <div class="news-card-top">
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;color:${cat.color}">${cat.label}</span>
+                <span class="news-sentiment ${imp.cls}">${imp.label}</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500;">${n.marca}</div>
+              <div class="news-headline">${n.titular}</div>
+              <div class="news-summary">${n.resumen}</div>
+              <div class="news-source">
+                <span>${n.fuente}</span>
+                <span class="source-dot"></span>
+                <span style="color:${n.relevancia === 'alta' ? 'var(--warning)' : 'var(--muted)'}">
+                  ${n.relevancia === 'alta' ? '⭐ Relevancia alta' : 'Relevancia media'}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+        </div>
+      </div>
+
+      <div class="report-section">
+        <div class="section-header">
+          <div class="section-icon">💡</div>
+          <div class="section-title">Insights Clave</div>
+        </div>
+        <div class="insights-list">
+          ${report.insights_clave.map(i => `
+            <div class="insight-item">
+              <div class="insight-bullet"></div>
+              <div class="insight-text">${i}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="report-section">
+        <div class="section-header">
+          <div class="section-icon">🎯</div>
+          <div class="section-title">Recomendaciones</div>
+        </div>
+        ${report.recomendaciones.map((r, i) => `
+          <div class="rec-item">
+            <div class="rec-num">${i + 1}</div>
+            <div class="rec-content">
+              <div class="rec-title">${r.titulo}</div>
+              <div class="rec-text">${r.descripcion}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="padding:20px 0;border-top:1px solid var(--border);margin-top:16px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;color:var(--muted);">Generado con Claude · Genomma Lab Intelligence Agent</span>
+        <span style="font-size:12px;color:var(--muted);">${new Date().toLocaleTimeString('es-MX')}</span>
+      </div>
+    </div>
+  `;
+}
+
+function copyReport() {
+  const text = document.querySelector('.report-area')?.innerText || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => btn.textContent = '📋 Copiar texto', 2000);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
